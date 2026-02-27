@@ -5,12 +5,54 @@ import { Input } from "./components/ui/input";
 import { Spinner } from "./components/ui/spinner";
 import { NavLink } from "react-router";
 import { EyeIcon, EyeOffIcon } from "lucide-react";
+import axios from "axios";
+import toast from "react-hot-toast";
 
 const Register = () => {
     const [isRegister, setIsRegister] = useState<boolean>(false);
     const [isPasswordVisible, setIsPasswordVisible] = useState(false);
     const [isConfirmPasswordVisible, setIsConfirmPasswordVisible] =
         useState(false);
+
+    const [username, setUsername] = useState<string>("");
+    const [password, setPassword] = useState<string>("");
+    const [confirmPassword, setConfirmPassword] = useState<string>("");
+
+    const API = axios.create({
+        baseURL: import.meta.env.VITE_API_URL,
+    });
+
+    const Register = async () => {
+        try {
+            setIsRegister(true);
+            if (confirmPassword.trim() !== password.trim()) {
+                toast(`❌ Passwords should match`);
+                setIsRegister(false);
+                return;
+            }
+            if (
+                confirmPassword.trim().length < 6 ||
+                password.trim().length < 6
+            ) {
+                toast(`❌ Passwords must be at least 6 characters`);
+                setIsRegister(false);
+                return;
+            }
+            const res = await API.post("auth/register", {
+                username,
+                password,
+            });
+            console.log(res);
+            setIsRegister(false);
+        } catch (error) {
+            toast.dismiss();
+            if (axios.isAxiosError(error)) {
+                const errorMessage = error.response?.data?.message;
+                toast(`❌ ${errorMessage}`);
+                setIsRegister(false);
+            }
+        }
+    };
 
     return (
         <div className="h-screen w-full flex items-center justify-center">
@@ -34,6 +76,10 @@ const Register = () => {
                                     </FieldLabel>
                                     <Input
                                         id="username"
+                                        value={username}
+                                        onChange={(e) =>
+                                            setUsername(e.target.value)
+                                        }
                                         type="text"
                                         placeholder="enter your username"
                                     />
@@ -50,6 +96,10 @@ const Register = () => {
                                     <div className="relative">
                                         <Input
                                             id="password"
+                                            value={password}
+                                            onChange={(e) =>
+                                                setPassword(e.target.value)
+                                            }
                                             type={
                                                 isPasswordVisible
                                                     ? "text"
@@ -91,6 +141,12 @@ const Register = () => {
                                     <div className="relative">
                                         <Input
                                             id="confirmPassword"
+                                            value={confirmPassword}
+                                            onChange={(e) =>
+                                                setConfirmPassword(
+                                                    e.target.value,
+                                                )
+                                            }
                                             type={
                                                 isConfirmPasswordVisible
                                                     ? "text"
@@ -125,7 +181,7 @@ const Register = () => {
                         </FieldSet>
                         <Button
                             disabled={isRegister}
-                            onClick={() => setIsRegister(true)}
+                            onClick={() => Register()}
                             className="w-full mt-10"
                         >
                             {isRegister ? "Signing up..." : "Sign up"}

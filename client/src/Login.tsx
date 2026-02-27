@@ -5,17 +5,75 @@ import { Spinner } from "./components/ui/spinner";
 import { useState } from "react";
 import { NavLink } from "react-router";
 import { EyeIcon, EyeOffIcon } from "lucide-react";
+import toast from "react-hot-toast";
+import axios from "axios";
+import { useNavigate, Link, useLocation } from "react-router";
+import { useAuth } from "./hooks/useAuth";
 
 const Login = () => {
     const [isLogin, setIsLogin] = useState<boolean>(false);
     const [isPasswordVisible, setIsPasswordVisible] = useState(false);
+
+    const [username, setUsername] = useState<string>("");
+    const [password, setPassword] = useState<string>("");
+
+    const [error, setError] = useState<string>("");
+    const [isLoading, setIsLoading] = useState<boolean>(false);
+
+    const navigate = useNavigate();
+    const { login } = useAuth();
+
+    const Login = async () => {
+        // Validate inputs
+        if (!password.trim() && !username.trim()) {
+            toast.error("Username and password are required");
+            return;
+        }
+        if (!username.trim()) {
+            toast.error("Username is required");
+            return;
+        }
+        if (!password.trim()) {
+            toast.error("Password is required");
+            return;
+        }
+
+        setIsLogin(true);
+        const loadingToast = toast.loading("Logging in...");
+        try {
+            const res = await login(username, password);
+            console.log("Login successful:", res);
+
+            toast.dismiss(loadingToast);
+            toast.success("Login successful!");
+
+            setTimeout(() => {
+                navigate("/dashboard");
+            }, 333);
+        } catch (error) {
+            toast.dismiss(loadingToast);
+
+            if (axios.isAxiosError(error)) {
+                // Handle Axios errors
+                const errorMessage = error.response?.data?.message;
+                toast.error(errorMessage);
+                console.log("Error response:", error.response?.data);
+            } else if (error instanceof Error) {
+                toast.error(error.message);
+            } else {
+                toast.error("An unexpected error occurred");
+            }
+        } finally {
+            setIsLogin(false);
+        }
+    };
 
     return (
         <div className="h-screen w-full flex items-center justify-center">
             <div className="bg-slate-50 p-10 rounded-xl shadow-xs flex flex-col justify-center items-center gap-5">
                 <div>
                     <h1 className="font-bold text-2xl">
-                        Sign in to manage your tasks.
+                        Sign in to manage your tasks
                     </h1>
                 </div>
                 <div>
@@ -32,6 +90,10 @@ const Login = () => {
                                     </FieldLabel>
                                     <Input
                                         id="username"
+                                        value={username}
+                                        onChange={(e) =>
+                                            setUsername(e.target.value)
+                                        }
                                         type="text"
                                         placeholder="enter your username"
                                     />
@@ -48,6 +110,10 @@ const Login = () => {
                                     <div className="relative">
                                         <Input
                                             id="password"
+                                            value={password}
+                                            onChange={(e) =>
+                                                setPassword(e.target.value)
+                                            }
                                             type={
                                                 isPasswordVisible
                                                     ? "text"
@@ -82,7 +148,7 @@ const Login = () => {
                         </FieldSet>
                         <Button
                             disabled={isLogin}
-                            onClick={() => setIsLogin(true)}
+                            onClick={() => Login()}
                             className="w-full mt-10"
                         >
                             {isLogin ? "Signing in..." : "Sign in"}

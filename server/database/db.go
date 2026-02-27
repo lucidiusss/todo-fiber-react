@@ -40,7 +40,6 @@ func ConnectDB() {
 		log.Fatal("❌ Failed to connect to database:", err)
 	}
 
-	// Get generic database object to configure connection pool
 	sqlDB, err := DB.DB()
 	if err != nil {
 		log.Fatal("❌ Failed to get database instance:", err)
@@ -61,6 +60,11 @@ func ConnectDB() {
 
 	// Auto migrate the schema
 	err = DB.AutoMigrate(&models.Task{})
+	if err != nil {
+		log.Fatal("❌ Failed to migrate database:", err)
+	}
+
+	err = DB.AutoMigrate(&models.User{})
 	if err != nil {
 		log.Fatal("❌ Failed to migrate database:", err)
 	}

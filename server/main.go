@@ -9,6 +9,7 @@ import (
 	"github.com/joho/godotenv"
 	"github.com/lucidiusss/todo-fiber-react/database"
 	"github.com/lucidiusss/todo-fiber-react/handlers"
+	"github.com/lucidiusss/todo-fiber-react/middleware"
 )
 
 func main() {
@@ -23,7 +24,7 @@ func main() {
 
 	// create fiber app
 	app := fiber.New(fiber.Config{
-		AppName: "Tasks API with Fiber and PostgreSQL v0.1",
+		AppName: "Tasks API with Fiber, PostgreSQL and JWT Auth v1",
 	})
 
 	// middleware
@@ -38,15 +39,28 @@ func main() {
 }
 
 func setupRoutes(app *fiber.App) {
+	// public routes
 	app.Get("/health", func(c fiber.Ctx) error {
 		return c.JSON(fiber.Map{
 			"status":  "ok",
 			"message": "Server is running",
 		})
 	})
+	auth := app.Group("/api/v1/auth")
+	auth.Post("/register", handlers.Register)
+	auth.Post("/login", handlers.Login)
 
-	api := app.Group("/api/v1")
+	// protected routes
+	api := app.Group("/api/v1", middleware.AuthRequired())
 	tasksRoutes := api.Group("/tasks")
+	api.Get("/profile", func(c fiber.Ctx) error {
+		return c.JSON(fiber.Map{
+			"user_id":    c.Locals("user_id"),
+			"created_at": c.Locals("created_at"),
+			"username":   c.Locals("username"),
+			"message":    "Welcome to your profile!",
+		})
+	})
 
 	tasksRoutes.Get("/", handlers.GetTasks)
 	tasksRoutes.Post("/", handlers.CreateTask)
