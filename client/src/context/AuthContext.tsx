@@ -22,7 +22,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({
         const loadUser = async () => {
             if (token) {
                 try {
-                    const response = await api.get("/profile");
+                    const response = await api.get("/user");
                     setUser(response.data);
                 } catch (error) {
                     console.error("Failed to load user:", error);

@@ -51,6 +51,7 @@ func AuthRequired() fiber.Handler {
 		// set user info in context
 		c.Locals("user_id", claims["user_id"])
 		c.Locals("username", claims["username"])
+
 		return c.Next()
 	}
 }

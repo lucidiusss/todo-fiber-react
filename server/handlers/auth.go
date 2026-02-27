@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"fmt"
 	"os"
 	"time"
 
@@ -140,4 +141,21 @@ func Login(c fiber.Ctx) error {
 			Username: user.Username,
 		},
 	})
+}
+func GetMe(c fiber.Ctx) error {
+	userID := c.Locals("user_id")
+
+	fmt.Printf("userID: %v (type: %T)\n", userID, userID)
+
+	var user models.User
+
+	// Using Where explicitly
+	if err := database.DB.Where("id = ?", userID).First(&user).Error; err != nil {
+		return c.Status(fiber.StatusNotFound).JSON(fiber.Map{
+			"error": "User not found",
+		})
+	}
+
+	user.Password = ""
+	return c.JSON(user)
 }

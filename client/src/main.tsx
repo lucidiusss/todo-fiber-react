@@ -8,7 +8,6 @@ import Login from "./Login.tsx";
 import Register from "./Register.tsx";
 import { AuthProvider } from "./context/AuthContext.tsx";
 import ProtectedRoute from "./components/ProtectedRoute.tsx";
-import Dashboard from "./Dashboard.tsx";
 
 createRoot(document.getElementById("root")!).render(
     <StrictMode>
@@ -17,14 +16,6 @@ createRoot(document.getElementById("root")!).render(
                 <Routes>
                     <Route path="/login" element={<Login />} />
                     <Route path="/register" element={<Register />} />
-                    <Route
-                        path="/dashboard"
-                        element={
-                            <ProtectedRoute>
-                                <Dashboard />
-                            </ProtectedRoute>
-                        }
-                    />
                     <Route
                         path="/"
                         element={
@@ -37,12 +28,11 @@ createRoot(document.getElementById("root")!).render(
                 </Routes>
             </AuthProvider>
         </BrowserRouter>
-        ,
         <Toaster
-            position="top-right" // Позиция уведомлений
+            position="bottom-right"
             reverseOrder={false}
             toastOptions={{
-                duration: 4000, // Длительность показа (мс)
+                duration: 4000,
                 style: {
                     background: "#f8fafc",
                     color: "black",

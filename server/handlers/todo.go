@@ -1,15 +1,23 @@
 package handlers
 
 import (
+	"errors"
+	"fmt"
+
 	"github.com/gofiber/fiber/v3"
 	"github.com/lucidiusss/todo-fiber-react/database"
 	"github.com/lucidiusss/todo-fiber-react/models"
+	"gorm.io/gorm"
 )
 
 func GetTasks(c fiber.Ctx) error {
+	userID := c.Locals("user_id")
+
+	fmt.Printf("userID: %v (type: %T)\n", userID, userID)
+
 	var tasks []models.Task
 
-	result := database.DB.Find(&tasks)
+	result := database.DB.Where("user_id = ?", userID).Find(&tasks)
 
 	if result.Error != nil {
 		return c.Status(500).JSON(fiber.Map{
@@ -27,6 +35,7 @@ func GetTasks(c fiber.Ctx) error {
 }
 
 func CreateTask(c fiber.Ctx) error {
+
 	task := new(models.Task)
 
 	// parse req body
@@ -42,6 +51,18 @@ func CreateTask(c fiber.Ctx) error {
 		return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{
 			"success": false,
 			"message": "Title is required",
+		})
+	}
+
+	// check if task already exists
+	var count int64
+
+	database.DB.Model(&models.Task{}).Where("LOWER(title) = LOWER(?) AND id != ? AND user_id = ?", task.Title, task.ID, task.UserID).Count(&count)
+
+	if count > 0 {
+		return c.Status(fiber.StatusConflict).JSON(fiber.Map{
+			"success": false,
+			"error":   "Task with this title already exists",
 		})
 	}
 
@@ -85,6 +106,7 @@ func GetTask(c fiber.Ctx) error {
 
 func UpdateTask(c fiber.Ctx) error {
 	id := c.Params("id")
+	userID := c.Locals("user_id")
 
 	// parse updates into map
 	var updates map[string]any
@@ -104,9 +126,25 @@ func UpdateTask(c fiber.Ctx) error {
 		})
 	}
 
-	// remove fields that shouldn't be updated
+	if err := database.DB.Where("id = ? AND user_id = ?", id, userID).First(&task).Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return c.Status(fiber.StatusNotFound).JSON(fiber.Map{
+				"success": false,
+				"message": "Task not found or you don't have permission to update it",
+			})
+		}
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"success": false,
+			"message": "Database error",
+			"error":   err.Error(),
+		})
+	}
+
+	// Remove protected fields
 	delete(updates, "id")
+	delete(updates, "user_id")
 	delete(updates, "created_at")
+	delete(updates, "updated_at")
 	delete(updates, "deleted_at")
 
 	// validate field types
@@ -130,10 +168,13 @@ func UpdateTask(c fiber.Ctx) error {
 				"message": "Title must be a string",
 			})
 		}
+
+		userID := c.Locals("user_id")
+
 		// check if task already exists
 		var count int64
 
-		database.DB.Model(&models.Task{}).Where("LOWER(title) = LOWER(?) AND id != ?", title, id).Count(&count)
+		database.DB.Model(&models.Task{}).Where("LOWER(title) = LOWER(?) AND id != ? AND user_id = ?", title, id, userID).Count(&count)
 
 		if count > 0 {
 			return c.Status(fiber.StatusConflict).JSON(fiber.Map{
@@ -176,14 +217,27 @@ func UpdateTask(c fiber.Ctx) error {
 
 func DeleteTask(c fiber.Ctx) error {
 	id := c.Params("id")
+	userID := c.Locals("user_id")
 
 	var task models.Task
+	if err := database.DB.First(&task, id).Error; err != nil {
+		return c.Status(fiber.StatusNotFound).JSON(fiber.Map{
+			"success": false,
+			"message": "Task not found",
+		})
+	}
 
-	result := database.DB.First(&task, id)
-
-	if result.Error != nil {
-		return c.Status(404).JSON(fiber.Map{
-			"error": "Task not found",
+	if err := database.DB.Where("id = ? AND user_id = ?", id, userID).First(&task).Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return c.Status(fiber.StatusNotFound).JSON(fiber.Map{
+				"success": false,
+				"message": "Task not found or you don't have permission to update it",
+			})
+		}
+		return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+			"success": false,
+			"message": "Database error",
+			"error":   err.Error(),
 		})
 	}
 

@@ -7,6 +7,9 @@ import { Button } from "./components/ui/button";
 import { Plus } from "lucide-react";
 import toast from "react-hot-toast";
 import { Spinner } from "./components/ui/spinner";
+import Header from "./components/Header";
+import { api } from "./api/client";
+import { useAuth } from "./hooks/useAuth";
 
 export interface TaskInterface {
     id: number;
@@ -23,9 +26,7 @@ function App() {
     const [isAdding, setIsAdding] = useState<boolean>(false);
     const [isLoading, setIsLoading] = useState<boolean>(true);
 
-    const API = axios.create({
-        baseURL: import.meta.env.VITE_API_URL,
-    });
+    const { user } = useAuth();
 
     useEffect(() => {
         getTasks();
@@ -33,7 +34,7 @@ function App() {
 
     const getTasks = async () => {
         try {
-            const { data } = await API.get("tasks");
+            const { data } = await api.get("tasks");
             setTasks(data.data);
             setIsLoading(false);
         } catch (error) {
@@ -50,8 +51,9 @@ function App() {
         try {
             setIsAdding(true);
             const newTitle = title.trim();
-            const { data } = await API.post("/tasks", {
+            const { data } = await api.post("/tasks", {
                 title: newTitle,
+                user_id: user?.id,
             });
             setTasks([...tasks, data.data]);
             toast("✅ New task is created!");
@@ -70,6 +72,7 @@ function App() {
 
     return (
         <div className="flex h-screen items-center justify-center">
+            <Header />
             <div className="max-w-7xl w-full md:my-10 md:w-2/3 h-3/4 md:min-h-1/2 flex flex-col items-center gap-10 p-3 md:p-6 rounded-xl shadow-xs bg-slate-50">
                 <div>
                     <h1 className="text-2xl lg:text-3xl sm:text-3xl font-bold">

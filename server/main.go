@@ -53,14 +53,7 @@ func setupRoutes(app *fiber.App) {
 	// protected routes
 	api := app.Group("/api/v1", middleware.AuthRequired())
 	tasksRoutes := api.Group("/tasks")
-	api.Get("/profile", func(c fiber.Ctx) error {
-		return c.JSON(fiber.Map{
-			"user_id":    c.Locals("user_id"),
-			"created_at": c.Locals("created_at"),
-			"username":   c.Locals("username"),
-			"message":    "Welcome to your profile!",
-		})
-	})
+	api.Get("/user", handlers.GetMe)
 
 	tasksRoutes.Get("/", handlers.GetTasks)
 	tasksRoutes.Post("/", handlers.CreateTask)

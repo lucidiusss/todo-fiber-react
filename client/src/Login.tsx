@@ -17,9 +17,6 @@ const Login = () => {
     const [username, setUsername] = useState<string>("");
     const [password, setPassword] = useState<string>("");
 
-    const [error, setError] = useState<string>("");
-    const [isLoading, setIsLoading] = useState<boolean>(false);
-
     const navigate = useNavigate();
     const { login } = useAuth();
 
@@ -41,15 +38,12 @@ const Login = () => {
         setIsLogin(true);
         const loadingToast = toast.loading("Logging in...");
         try {
-            const res = await login(username, password);
-            console.log("Login successful:", res);
+            await login(username, password);
 
             toast.dismiss(loadingToast);
             toast.success("Login successful!");
 
-            setTimeout(() => {
-                navigate("/dashboard");
-            }, 333);
+            navigate("/");
         } catch (error) {
             toast.dismiss(loadingToast);
 
@@ -94,6 +88,9 @@ const Login = () => {
                                         onChange={(e) =>
                                             setUsername(e.target.value)
                                         }
+                                        onKeyDown={(e) =>
+                                            e.key === "Enter" ? Login() : ""
+                                        }
                                         type="text"
                                         placeholder="enter your username"
                                     />
@@ -114,6 +111,9 @@ const Login = () => {
                                             onChange={(e) =>
                                                 setPassword(e.target.value)
                                             }
+                                            onKeyDown={(e) =>
+                                                e.key === "Enter" ? Login() : ""
+                                            }
                                             type={
                                                 isPasswordVisible
                                                     ? "text"
@@ -123,13 +123,14 @@ const Login = () => {
                                         />
                                         <Button
                                             variant="ghost"
+                                            tabIndex={-1}
                                             size="icon"
-                                            onClick={() =>
+                                            onMouseDown={() =>
                                                 setIsPasswordVisible(
                                                     (prevState) => !prevState,
                                                 )
                                             }
-                                            className="text-muted-foreground focus-visible:ring-ring/50 absolute inset-y-0 right-0 rounded-l-none hover:bg-transparent"
+                                            className="cursor-pointer text-muted-foreground focus-visible:ring-ring/50 absolute inset-y-0 right-0 rounded-l-none hover:bg-transparent"
                                         >
                                             {isPasswordVisible ? (
                                                 <EyeOffIcon size={16} />
@@ -149,7 +150,7 @@ const Login = () => {
                         <Button
                             disabled={isLogin}
                             onClick={() => Login()}
-                            className="w-full mt-10"
+                            className="w-full mt-10 cursor-pointer"
                         >
                             {isLogin ? "Signing in..." : "Sign in"}
                             {isLogin ? <Spinner /> : <></>}

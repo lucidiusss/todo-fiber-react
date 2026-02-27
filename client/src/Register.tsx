@@ -3,10 +3,12 @@ import { Button } from "./components/ui/button";
 import { Field, FieldGroup, FieldLabel, FieldSet } from "./components/ui/field";
 import { Input } from "./components/ui/input";
 import { Spinner } from "./components/ui/spinner";
-import { NavLink } from "react-router";
+import { useNavigate, NavLink } from "react-router";
 import { EyeIcon, EyeOffIcon } from "lucide-react";
 import axios from "axios";
 import toast from "react-hot-toast";
+
+import { useAuth } from "./hooks/useAuth";
 
 const Register = () => {
     const [isRegister, setIsRegister] = useState<boolean>(false);
@@ -18,39 +20,48 @@ const Register = () => {
     const [password, setPassword] = useState<string>("");
     const [confirmPassword, setConfirmPassword] = useState<string>("");
 
-    const API = axios.create({
-        baseURL: import.meta.env.VITE_API_URL,
-    });
+    const { register } = useAuth();
+    const navigate = useNavigate();
 
     const Register = async () => {
+        if (!password.trim() || !confirmPassword.trim() || !username.trim()) {
+            toast.error(`All fields must be not empty`);
+            return;
+        }
+        if (confirmPassword.trim().length < 6 || password.trim().length < 6) {
+            toast.error(` Passwords must be at least 6 characters`);
+            return;
+        }
+        if (confirmPassword.trim() !== password.trim()) {
+            toast.error(` Passwords should match`);
+            return;
+        }
+
+        setIsRegister(true);
+        const loadingToast = toast.loading("Logging in...");
         try {
-            setIsRegister(true);
-            if (confirmPassword.trim() !== password.trim()) {
-                toast(`❌ Passwords should match`);
-                setIsRegister(false);
-                return;
-            }
-            if (
-                confirmPassword.trim().length < 6 ||
-                password.trim().length < 6
-            ) {
-                toast(`❌ Passwords must be at least 6 characters`);
-                setIsRegister(false);
-                return;
-            }
-            const res = await API.post("auth/register", {
-                username,
-                password,
-            });
-            console.log(res);
-            setIsRegister(false);
+            const res = await register(username, password);
+            console.log("Registration successful:", res);
+
+            toast.dismiss(loadingToast);
+            toast.success("Registration successful!");
+
+            navigate("/");
         } catch (error) {
-            toast.dismiss();
+            toast.dismiss(loadingToast);
+
             if (axios.isAxiosError(error)) {
+                // Handle Axios errors
                 const errorMessage = error.response?.data?.message;
-                toast(`❌ ${errorMessage}`);
-                setIsRegister(false);
+                toast.error(errorMessage);
+                console.log("Error response:", error.response?.data);
+            } else if (error instanceof Error) {
+                toast.error(error.message);
+            } else {
+                toast.error("An unexpected error occurred");
             }
+        } finally {
+            setIsRegister(false);
         }
     };
 
@@ -80,6 +91,9 @@ const Register = () => {
                                         onChange={(e) =>
                                             setUsername(e.target.value)
                                         }
+                                        onKeyDown={(e) =>
+                                            e.key === "Enter" ? Register() : ""
+                                        }
                                         type="text"
                                         placeholder="enter your username"
                                     />
@@ -100,6 +114,11 @@ const Register = () => {
                                             onChange={(e) =>
                                                 setPassword(e.target.value)
                                             }
+                                            onKeyDown={(e) =>
+                                                e.key === "Enter"
+                                                    ? Register()
+                                                    : ""
+                                            }
                                             type={
                                                 isPasswordVisible
                                                     ? "text"
@@ -109,13 +128,14 @@ const Register = () => {
                                         />
                                         <Button
                                             variant="ghost"
+                                            tabIndex={-1}
                                             size="icon"
-                                            onClick={() =>
+                                            onMouseDown={() =>
                                                 setIsPasswordVisible(
                                                     (prevState) => !prevState,
                                                 )
                                             }
-                                            className="text-muted-foreground focus-visible:ring-ring/50 absolute inset-y-0 right-0 rounded-l-none hover:bg-transparent"
+                                            className="cursor-pointer text-muted-foreground focus-visible:ring-ring/50 absolute inset-y-0 right-0 rounded-l-none hover:bg-transparent"
                                         >
                                             {isPasswordVisible ? (
                                                 <EyeOffIcon size={16} />
@@ -147,6 +167,11 @@ const Register = () => {
                                                     e.target.value,
                                                 )
                                             }
+                                            onKeyDown={(e) =>
+                                                e.key === "Enter"
+                                                    ? Register()
+                                                    : ""
+                                            }
                                             type={
                                                 isConfirmPasswordVisible
                                                     ? "text"
@@ -156,13 +181,14 @@ const Register = () => {
                                         />
                                         <Button
                                             variant="ghost"
+                                            tabIndex={-1}
                                             size="icon"
-                                            onClick={() =>
+                                            onMouseDown={() =>
                                                 setIsConfirmPasswordVisible(
                                                     (prevState) => !prevState,
                                                 )
                                             }
-                                            className="text-muted-foreground focus-visible:ring-ring/50 absolute inset-y-0 right-0 rounded-l-none hover:bg-transparent"
+                                            className="cursor-pointer text-muted-foreground focus-visible:ring-ring/50 absolute inset-y-0 right-0 rounded-l-none hover:bg-transparent"
                                         >
                                             {isConfirmPasswordVisible ? (
                                                 <EyeOffIcon size={16} />
@@ -182,7 +208,7 @@ const Register = () => {
                         <Button
                             disabled={isRegister}
                             onClick={() => Register()}
-                            className="w-full mt-10"
+                            className="w-full mt-10 cursor-pointer"
                         >
                             {isRegister ? "Signing up..." : "Sign up"}
                             {isRegister ? <Spinner /> : <></>}

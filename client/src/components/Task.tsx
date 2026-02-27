@@ -17,6 +17,7 @@ import type { TaskInterface } from "@/App";
 import { Input } from "./ui/input";
 import toast from "react-hot-toast";
 import { Spinner } from "./ui/spinner";
+import { api } from "@/api/client";
 
 interface TaskProps {
     id: number;
@@ -42,9 +43,6 @@ const Task: FC<TaskProps> = ({
     const [originalTitle, setOriginalTitle] = useState<string>(title);
     const [isDeleting, setIsDeleting] = useState<boolean>(false);
     const [isEditing, setIsEditing] = useState<boolean>(false);
-    const API = axios.create({
-        baseURL: import.meta.env.VITE_API_URL,
-    });
 
     const formatDate = (date: string | Date) => {
         try {
@@ -70,7 +68,7 @@ const Task: FC<TaskProps> = ({
         try {
             setIsDeleting(true);
             if (isRenaming === false) {
-                await API.delete(`tasks/${id}`).then(() => {
+                await api.delete(`tasks/${id}`).then(() => {
                     setTasks(tasks.filter((t) => t.id !== id));
                 });
                 toast("✅ Task was successfully deleted!");
@@ -102,7 +100,7 @@ const Task: FC<TaskProps> = ({
             }
             setIsEditing(true);
             const loadingToast = toast.loading("Renaming task...");
-            await API.put(`/tasks/${id}`, {
+            await api.put(`/tasks/${id}`, {
                 title: inputValue.trim(),
             });
             setTasks((tasks) =>
@@ -145,7 +143,7 @@ const Task: FC<TaskProps> = ({
                     : "Task is back to in-progress state...",
             );
 
-            await API.put(`tasks/${id}`, {
+            await api.put(`tasks/${id}`, {
                 completed: !completed,
             });
             setTasks((tasks) =>
