@@ -7,7 +7,7 @@ import { NavLink } from "react-router";
 import { EyeIcon, EyeOffIcon } from "lucide-react";
 import toast from "react-hot-toast";
 import axios from "axios";
-import { useNavigate, Link, useLocation } from "react-router";
+import { useNavigate } from "react-router";
 import { useAuth } from "./hooks/useAuth";
 
 const Login = () => {
