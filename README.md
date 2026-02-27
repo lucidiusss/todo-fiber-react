@@ -1,5 +1,2 @@
-# Tech stack:
-## Frontend:
-### React,Vite, React-Router, Typescript, Axios
-## Backend:
-### Go, Fiber, JWT, GORM, PostgreSQL
+# Todo App (Fiber&React)
+Live [demo](https://todo.lucidiusss.ru/)
