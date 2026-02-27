@@ -62,6 +62,14 @@ const Login = () => {
         }
     };
 
+    const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+        if (e.key === "Enter") {
+            e.preventDefault(); // Prevent form submission if needed
+            e.currentTarget.blur(); // Removes focus from input
+            Login();
+        }
+    };
+
     return (
         <div className="h-screen w-full flex items-center justify-center">
             <div className="bg-slate-50 p-10 rounded-xl shadow-xs flex flex-col justify-center items-center gap-5">
@@ -88,9 +96,7 @@ const Login = () => {
                                         onChange={(e) =>
                                             setUsername(e.target.value)
                                         }
-                                        onKeyDown={(e) =>
-                                            e.key === "Enter" ? Login() : ""
-                                        }
+                                        onKeyDown={(e) => handleKeyDown(e)}
                                         type="text"
                                         placeholder="enter your username"
                                     />
@@ -111,9 +117,7 @@ const Login = () => {
                                             onChange={(e) =>
                                                 setPassword(e.target.value)
                                             }
-                                            onKeyDown={(e) =>
-                                                e.key === "Enter" ? Login() : ""
-                                            }
+                                            onKeyDown={(e) => handleKeyDown(e)}
                                             type={
                                                 isPasswordVisible
                                                     ? "text"

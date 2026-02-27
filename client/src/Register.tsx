@@ -64,6 +64,13 @@ const Register = () => {
             setIsRegister(false);
         }
     };
+    const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+        if (e.key === "Enter") {
+            e.preventDefault(); // Prevent form submission if needed
+            e.currentTarget.blur(); // Removes focus from input
+            Register();
+        }
+    };
 
     return (
         <div className="h-screen w-full flex items-center justify-center">
@@ -91,9 +98,7 @@ const Register = () => {
                                         onChange={(e) =>
                                             setUsername(e.target.value)
                                         }
-                                        onKeyDown={(e) =>
-                                            e.key === "Enter" ? Register() : ""
-                                        }
+                                        onKeyDown={(e) => handleKeyDown(e)}
                                         type="text"
                                         placeholder="enter your username"
                                     />
@@ -114,11 +119,7 @@ const Register = () => {
                                             onChange={(e) =>
                                                 setPassword(e.target.value)
                                             }
-                                            onKeyDown={(e) =>
-                                                e.key === "Enter"
-                                                    ? Register()
-                                                    : ""
-                                            }
+                                            onKeyDown={(e) => handleKeyDown(e)}
                                             type={
                                                 isPasswordVisible
                                                     ? "text"
@@ -167,11 +168,7 @@ const Register = () => {
                                                     e.target.value,
                                                 )
                                             }
-                                            onKeyDown={(e) =>
-                                                e.key === "Enter"
-                                                    ? Register()
-                                                    : ""
-                                            }
+                                            onKeyDown={(e) => handleKeyDown(e)}
                                             type={
                                                 isConfirmPasswordVisible
                                                     ? "text"
